@@ -1,0 +1,105 @@
+import geopandas as gpd
+import pandas as pd
+import os
+import fiona
+from netCDF4 import Dataset
+path = 'C:\\pj\\shape file'
+os.chdir (path)
+county = gpd.read_file('County.shp')
+county.plot()
+SETx =('48167|48071|48201|48245|48361|48291|48199|48339|48407|48471|48457|48373|48241|48351')
+SET_x = county[county['FIPS_ST_CN'].str.contains(SETx)]
+SET_x.plot()
+names = os.listdir('C:\\pj\\data')
+#Importing Setx map as a shape file
+SET_x.to_file('SETx County.shp')
+SET_x.to_csv('SETx County.csv')
+df = pd.read_csv('SETx County.csv')
+FIPS = df.iloc[:,4]
+CountyName = df.iloc[:,7]
+GID = df.iloc[:,8]
+Shape = df.iloc[:,11]
+path = 'C:\pj\City Name'
+os.chdir (path)
+df = pd.read_csv('city name.csv')
+CityName = df.iloc[:,1]
+Lat = df.iloc[:,2]
+Lon = df.iloc[:,3]
+Index = []
+count = 1
+for check in Lon:
+    Index.append(count)
+    count = count + 1
+path = 'C:\pj\Table Results'
+os.chdir (path)
+PositionTable = pd.DataFrame(0, columns = ['Grid ID','Latitude','longtitude','FIPS'], index = Index)
+for check in Index:
+    check = check - 1
+    check2 = int(check/2)
+    PositionTable.iloc[check] = [GID[check2],Lat[check],Lon[check],FIPS[check2]]
+PositionTable.to_csv('PositionTable.csv')
+CountyTable = pd.DataFrame(0, columns = ['FIPS','County Name'], index = Index)
+for check in Index:
+    check = check - 1
+    check2 = int(check/2)
+    CountyTable.iloc[check] = [FIPS[check2],CountyName[check2]]
+CountyTable.to_csv('CountyTable.csv')
+CityTable = pd.DataFrame(0, columns = ['City ID','City Name','Grid ID','FIPS'], index = Index)
+for check in Index:
+    check = check - 1
+    check2 = int(check/2)
+    CityTable.iloc[check] = [check+1,CityName[check],GID[check2],FIPS[check2]]
+CityTable.to_csv('CityTable.csv')
+for check in Index:
+              locationlat = Lat[check-1] 
+              locationlon = Lon[check-1]
+              DateAndTime = []
+              x = 0
+              for name in names:
+                  varLab = ''
+                  if 'pr' in name:
+                      varLab = 'pr'
+                  if 'ts' in name:
+                      varLab = 'ts'
+                  if 'sfcWind' in name:
+                      varLab = 'sfcWind'
+                  if 'hur' in name:
+                      varLab = 'hur'
+                  if 'clt' in name:
+                      varLab = 'clt'
+                  dt = []
+                  data = Dataset(r'C:\\pj\\data\\'+name,'r')
+                  time = data.variables['time'][:]
+                  lat = data.variables['lat'][:]
+                  lon = data.variables['lon'][:]
+                  var = data.variables[str(varLab)][:]
+                  SqDiffLat = (locationlat - lat )**2
+                  SqDiffLon = (-1*locationlon - lon )**2
+                  MinDiffLat = SqDiffLat.argmin()
+                  MinDiffLon = SqDiffLon.argmin()
+                  flag = 0
+                  for date in time:
+                      year = (int(date/365))
+                      if flag == 0:
+                          if '15' in name:
+                              yearadd = 2015-year
+                          if '50' in name:
+                              yearadd = 2050-year
+                      month = int((date-year*365)/30)+1
+                      year = yearadd + year
+                      flag = 1
+                      DateAndTime.append(str(year) + '-' +str(month))
+                  df = pd.DataFrame(0, columns = [str(varLab),'Latitude','longtitude'], index = DateAndTime)
+                  x = 0
+                  for time in range(0,var.__len__() ):
+                      time = int(time)
+                      MinDiffLat = int(MinDiffLat)
+                      MinDiffLon = int(MinDiffLon)
+                      if varLab == 'hur':
+                          df.iloc[time] = [var[time,0,  MinDiffLat, MinDiffLon],lat[MinDiffLat],lon[MinDiffLon]]
+                      else:
+                          df.iloc[time] = [var[time,  MinDiffLat, MinDiffLon],lat[MinDiffLat],lon[MinDiffLon]]
+                  df.to_csv(r'C:\\pj\\prcc\\'+str(locationlat)+' lat -'+str(locationlon)+' lon - '+name)
+                  df.empty
+                  dt.clear()
+                  DateAndTime.clear()
