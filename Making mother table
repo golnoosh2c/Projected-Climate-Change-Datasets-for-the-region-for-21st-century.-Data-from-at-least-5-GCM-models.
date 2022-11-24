@@ -1,0 +1,83 @@
+import geopandas as gpd
+import pandas as pd
+import os
+import fiona
+from netCDF4 import Dataset
+names = os.listdir('C:\\pj\\prcc') #defining the path
+path = 'C:\\pj\\shape file'
+os.chdir (path)
+df = pd.read_csv('SETx County.csv') #reading the csv file
+FIPS = df.iloc[:,4]  #extracting column
+CountyName = df.iloc[:,7]  #extracting column
+Shape = df.iloc[:,11]  #extracting column
+path = 'C:\pj\City Name' #define directory to read the csv file
+os.chdir (path)
+df = pd.read_csv('city name.csv') #reading the csv file
+CityName = df.iloc[:,1] #extracting column
+Lat = df.iloc[:,2] #extracting column
+Lon = df.iloc[:,3] #extracting column
+Index = [] #creating an empty INDEX
+count = 1 # staring value of the index
+for check in Lon: #use check to fill the count
+    Index.append(count) #appending as a list 
+    count = count + 1
+path = 'C:\\Users\\User\\OneDrive\\Desktop\\Project-02(Final files)\\Table Results'
+os.chdir (path)  #defining the path
+PositionTable = pd.read_csv('PositionTable.csv') #reading the csv file
+CountyTable = pd.read_csv('CountyTable.csv') #reading the csv file
+CityTable = pd.read_csv('CityTable.csv') #reading the csv file
+GID = [40,47,54,59,61,67,69,71,81,87,91,92,93,95] #assign all the Grid id as an array
+path = 'C:\\Users\\User\\OneDrive\\Desktop\\Project-02(Final files)\\prcc'
+os.chdir (path) #change the directort to prcc
+variables = ['clt','hur','pr','sfcWind','ts'] #  assign all the variable as an array
+VarNum = [105,102,104,103,101] #assigning all the parameter id as an array
+Comps = ['BCC','Can','CES','GFDL','HadGEM'] #assigning all the model as an array
+CompNum = [5,4,1,2,3]  #assigning all the model id as an array
+BY = [15,50] #assigning the time
+TotalTime = []
+AllValues = []
+TGID = []
+TVar = []
+TCom = []
+TotalLat = []
+TotalLon = []
+CityCount = 0
+for CityLat in Lat:
+    for CityLon in Lon:
+        VarCount = 0
+        for var in variables:
+            ComCount = 0
+            for comp in Comps:
+                for SY in BY:
+                    for FileName in names:
+                        if str(CityLat) in FileName:
+                            if str(CityLon) in FileName:
+                               if str(var) in FileName:
+                                   if str(comp) in FileName:
+                                       if str(SY) in FileName:
+                                           BigD = pd.read_csv(FileName)
+                                           Time = BigD.iloc[:,0]
+                                           TotalTime.extend(Time)
+                                           Value = BigD.iloc[:,1]
+                                           AllValues.extend(Value)
+                                           for count in range(0,Time.__len__()):
+                                               TGID.append(GID[int(CityCount/2)])
+                                               TotalLat.append(CityLat)
+                                               TotalLon.append(CityLon)
+                                               TVar.append(VarNum[VarCount])
+                                               TCom.append(CompNum[ComCount])
+                ComCount = ComCount + 1
+            VarCount = VarCount + 1
+    CityCount = CityCount + 1
+    print("One City is Done")
+Index = []
+for count in range(1,AllValues.__len__()+1):
+    Index.append(count)
+print(TGID.__len__())
+df = pd.DataFrame(0, columns = ['Grid ID','Latitude','Longtitude','Time','Model ID','Parameter ID','Value'], index = Index)
+for count in Index:
+    df.iloc[count-1] = [TGID[count-1],TotalLat[count-1],TotalLon[count-1],TotalTime[count-1],TCom[count-1],TVar[count-1],AllValues[count-1]]
+    if count%10000 == 0:
+        print("Ten thousand has passed!")
+path = 'C:\pj\Table Results'
+os.chdir (path)
