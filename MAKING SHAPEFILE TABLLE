@@ -1,0 +1,26 @@
+path = 'C:\\pj\\shape file'  #reading directory
+os.chdir (path)              #changing directory
+county = gpd.read_file('County.shp')   #read shape file by geopandas
+SETx =('48167|48071|48201|48245|48361|48291|48199|48339|48407|48471|48457|48373|48241|48351')   #clip the shapefile
+SET_x = county[county['FIPS_ST_CN'].str.contains(SETx)]   
+SET_x.plot()
+names = os.listdir('C:\\pj\\data')   #make a list of directory
+#Importing Setx map as a shape file
+SET_x.to_file('SETx County.shp') 
+SET_x.to_csv('SETx County.csv')
+df = pd.read_csv('SETx County.csv')  #read csv file
+Shape = df.iloc[:,11]                # read column no 11 and extract it
+path = 'C:\pj\City Name'              #reading directory
+os.chdir (path)                      #changing directory
+df = pd.read_csv('city name.csv')   #read csv file 
+Lat = df.iloc[:,2]                   # read column no 2 and extract it
+Lon = df.iloc[:,3]                   # read column no 3 and extract it
+path = 'C:\pj\Table Results'          #reading directory
+os.chdir (path)                       #changing directory
+Index =[]              
+for count in range(0, len(Shape)):    #count based on the len of shape column
+    Index.append(count)
+ShapeTable = pd.DataFrame(0, columns = ['Latitude','Longtitude','shape'], index = Index)      #make a df based on required columns
+for check in Index:
+    ShapeTable.iloc[check] = [Lat[check*2],Lon[check*2],Shape[check]]      # fill out column note that shape is based on county and lat and lon based on city. we have 2 city for each county
+ShapeTable.to_csv('ShapeTable.csv')
