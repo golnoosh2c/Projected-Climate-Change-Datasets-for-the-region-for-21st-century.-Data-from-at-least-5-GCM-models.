@@ -1,0 +1,69 @@
+#Importing libraries
+import sqlite3
+import pandas as pd
+import os
+#Defining the path
+path = 'C:\\Users\\User\\OneDrive\\Desktop\\Project-02(Final files)\\database table'
+os.chdir (path)
+#Reading the table from the CSV file:
+
+a=pd.read_csv('county info.csv')
+print(a)
+b=pd.read_csv('table model.csv')
+print(b)
+c=pd.read_csv('Table param.csv')
+print(c)
+d=pd.read_csv('Total Table.csv')
+print(d)
+#Creating a new database
+
+connection = sqlite3.connect('Final_Relational_db.db') #creating a database name 'Final_Relational_db'
+
+cursor = connection.cursor () #using cursor to flech data from database
+#Connecting the data to the database
+
+a.to_sql('county',connection)                  #connecting a to databse as county
+b.to_sql('model',connection)                   #connecting a to databse as model
+c.to_sql('parameter',connection)               #connecting a to databse as parameter
+d.to_sql('final_table',connection)             #connecting a to databse as final_table
+
+connection.commit()
+cursor = connection.cursor()
+#Table Joining
+
+Join_1 = ''' SELECT * FROM county INNER JOIN final_table ON county.Grid_ID = final_table.Grid_ID
+            ;'''        # Joining county table with final_table by grid_id
+
+#Executing the table:
+cursor.execute(Join_1)
+
+#Table Joining:
+Join_2 = '''SELECT * FROM model INNER JOIN final_table ON model.Model_ID = final_table.Model_ID
+            ;'''      # Joining model table with final_table by Model_Id
+            
+#Executing the table:
+cursor.execute(Join_2)
+
+#Table Joining:
+Join_3 = '''SELECT * FROM parameter INNER JOIN final_table ON parameter.Parameter_ID = final_table.Parameter_ID
+            ;'''     # Joining parameter table with final_table by Parameter_Id
+#Executing the table:
+cursor.execute(Join_3)
+#Query From the Database:
+#Q-01:What will be the possible surafce temerature in the yaer 2099 in Beaumont city?
+Q1 = connection.execute("select Value,Model_ID,Latitude,longtitude from final_table where Parameter_ID=101 and Grid_ID in (SELECT Grid_ID from county where City_Name= 'Beaumont'  and time>'2098-12')")
+print(Q1.fetchall())
+Q1=pd.read_csv('Beaumont_city_stemp.csv')
+print(Q1)
+#Query From the Database:
+#Q-2: What will be the amount of precipitation all Cities in the year 2045?
+Q2 = connection.execute("select Latitude,longtitude,Value from final_table where Parameter_ID=104 and Grid_ID in (select grid_id from county where time <='2045-12' and time>='2045-1')")
+print(Q2.fetchall())
+Q2=pd.read_csv('Pr_allcities_2045.csv')
+print(Q2)
+#Query From the Database:
+#Q-3: What was the amount of total cloud cover percentage for "Orange" county in the year 2015?
+Q3 = connection.execute("select Value,Model_ID,Latitude,longtitude from final_table where Parameter_ID=105 and Grid_ID in (SELECT Grid_ID from county where County_Name='Orange' and time<'2016-1')")
+print(Q3.fetchall())
+Q3= pd.read_csv('Total_cc_orange.csv')
+print(Q3)
