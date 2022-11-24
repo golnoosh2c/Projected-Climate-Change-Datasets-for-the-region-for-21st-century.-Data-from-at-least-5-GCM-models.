@@ -1,0 +1,39 @@
+path = 'C:\pj\Table Results'
+os.chdir (path)
+df = pd.read_csv('ShapeTable.csv')
+Shape = df.iloc[:,3]
+wc = ['1','2','3','4','5','6','7','8','9','0']      #we define numbers because shape column is a string
+counter = 1
+path = 'C:\pj\Sectionator'
+os.chdir (path)
+for item in Shape:      # for each item in shape 
+    NumExtractor = ''   #define place holder
+    flag = 0             #define place holder
+    TotalNums = []        #define place holder
+    while item != '':     #continue till there is no space
+        if flag == 5:     # continue till you read the fifth char
+            TotalNums.append(NumExtractor)     # add number to numExtractor
+            flag = flag + 1     #add one to the flag
+        elif item[0] == '.':    #for item 0  if it was .
+            NumExtractor = NumExtractor + '.'    #put decimal point if you saw decimal point
+            item = item[1:]  
+        elif item[0] in wc:                      # if it was in wc numbers
+            NumExtractor = NumExtractor + item[0]
+            item = item[1:]    
+            flag = flag + 1
+        elif item[0] == ' ':
+            NumExtractor = ''
+            flag = 0
+            item = item[1:]
+        else:
+            item = item[1:]
+    Index = []
+    for num in range(0,int(len(TotalNums)/2)):
+        Index.append(num)
+    ShapeTable = pd.DataFrame(0, columns = ['Latitude','Longtitude'], index = Index)
+    for check in Index:
+        A = (float(TotalNums[check*2]) - 93)*20             #lat are odd rows start point is -93 
+        B = (float(TotalNums[check*2 + 1]) -29)*20          #long are even rows
+        ShapeTable.iloc[check] = [A,B]
+    ShapeTable.to_csv('ShapeTable'+ str(counter) +'.csv')  #defining name of file
+    counter = counter + 1
