@@ -1,0 +1,72 @@
+#IMPORTING LIBRARIES
+import geopandas as gpd
+import shapely.wkt
+import pandas as pd
+import os
+import numpy as np
+path = 'C:\pj\Table Results'
+os.chdir (path)
+df = pd.read_csv('Total Table.csv') #Read CSV file
+I1 = df.iloc[:,1]  #we dont want to make condition on this column
+I2 = df.iloc[:,2]  #we dont want to make condition on this column
+I3 = df.iloc[:,3]  #we dont want to make condition on this column
+I5 = df.iloc[:,5]  #we dont want to make condition on this column
+time = df.iloc[:,4]  #we want to make condition on this column
+Parm = df.iloc[:,6]  #we want to make condition on this column
+value = df.iloc[:,7] #we want to see values of this column based on two condition
+RelativeValue = []    #Specify place holder 
+TempIndex = []
+Index = []
+NextMapIndex = []
+count = 0
+years = ['2015-1','2015-2','2015-3','2015-4','2015-5','2015-6','2015-7','2015-8','2015-9','2015-10','2015-11','2015-12'] #our condition for year
+for item in time:
+    if item in years:           
+       TempIndex.append(count)   #tempindex is those index which the time includes year values (year 2015)
+    count = count + 1
+count = 0
+count2 = 0
+for item in Parm:
+    if item == 101:
+        if count in TempIndex:
+            Index.append(count) 
+            NextMapIndex.append(count2)   #nextMapIndex is the indexes which the time includes year 2015 and parameter is 101
+            count2 = count2 + 1
+    count = count + 1
+
+path = 'C:\pj\Table Results'
+os.chdir (path)  #In the following we are trying to make csv file based on the condition we want all rows which time is 2015 and parameter 101
+PrTable = pd.DataFrame(0, columns = ['Grid ID','Latitude','Longtitude','Time','Model ID','Parameter ID','Value'], index = NextMapIndex)
+count = 0
+for Item in Index:   # fill out the dataFrame based on the index we defined
+    PrTable.iloc[count] = [I1[Item],I2[Item],I3[Item],time[Item],I5[Item],Parm[Item],value[Item]]
+    count = count + 1
+PrTable.to_csv('ts2015.csv')
+# Do above for the year 2099
+years = ['2099-1','2099-2','2099-3','2099-4','2099-5','2099-6','2099-7','2099-8','2099-9','2099-10','2099-11','2099-12']
+RelativeValue = []
+TempIndex = []
+Index = []
+NextMapIndex = []
+count = 0
+for item in time:
+    if item in years:
+       TempIndex.append(count)
+    count = count + 1
+count = 0
+count2 = 0
+for item in Parm:
+    if item == 101:
+        if count in TempIndex:
+            Index.append(count)
+            NextMapIndex.append(count2)
+            count2 = count2 + 1
+    count = count + 1
+path = 'C:\pj\Table Results'
+os.chdir (path)
+PrTable = pd.DataFrame(0, columns = ['Grid ID','Latitude','Longtitude','Time','Model ID','Parameter ID','Value'], index = NextMapIndex)
+count = 0
+for Item in Index:
+    PrTable.iloc[count] = [I1[Item],I2[Item],I3[Item],time[Item],I5[Item],Parm[Item],value[Item]]
+    count = count + 1
+PrTable.to_csv('ts2099.csv')
